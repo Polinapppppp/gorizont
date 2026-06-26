@@ -4,17 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Apartment;
 use App\Models\Application;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $applications = Application::with(['user', 'apartment', 'realtor'])
-            ->latest()
-            ->paginate(15);
+        $query = Application::with(['user', 'apartment', 'realtor']);
 
-        return view('admin.dashboard', compact('applications'));
+        if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'viewing_scheduled', 'closed'])) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('realtor_id')) {
+            $query->where('realtor_id', $request->realtor_id);
+        }
+
+
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+
+        $applications = $query->paginate(15)->withQueryString();
+
+        $realtors = User::where('role_id', 3)->get();
+
+        return view('admin.dashboard', compact('applications', 'realtors', 'sort'));
     }
 
     public function assignRealtor(Request $request, Application $application)

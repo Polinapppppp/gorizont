@@ -13,7 +13,7 @@
 <body class="page">
     <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -25,7 +25,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif
@@ -78,129 +80,142 @@
         </div>
     </div>
 
-    <main class="page__main">
-        <div class="page__main" style="padding: 40px 0;">
-            <div style="max-width: 1600px; margin: 0 auto; ">
+    <main class="page__s">
+    <div class="page__main admin-section">
+        <div class="admin-container">
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <h1 style="font-family: var(--font-display); font-size: 32px; color: #1a1a1a; margin: 0;">Мои
-                        клиенты</h1>
+            <h1 class="admin-title">Мои клиенты</h1>
 
+            <!-- Фильтры -->
+            <div class="admin-panel-card">
+                <div class="panel-header flex-between">
+                    <h2 class="panel-title">Заявки</h2>
+
+                    <form method="GET" action="{{ route('realtor.dashboard') }}"
+                        style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+
+                        <select name="status" class="filter-select">
+                            <option value="">Все статусы</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Новая заявка</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Заявка принята</option>
+                            <option value="viewing_scheduled" {{ request('status') == 'viewing_scheduled' ? 'selected' : '' }}>Назначен просмотр</option>
+                            <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Закрыта</option>
+                        </select>
+
+                        <select name="type" class="filter-select">
+                            <option value="">Все типы</option>
+                            <option value="with_apartment" {{ request('type') == 'with_apartment' ? 'selected' : '' }}>С квартирой</option>
+                            <option value="complex_only" {{ request('type') == 'complex_only' ? 'selected' : '' }}>Просмотр комплекса</option>
+                        </select>
+
+                        <select name="sort" class="filter-select">
+                            <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>Сначала новые</option>
+                            <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Сначала старые</option>
+                        </select>
+
+                        <button type="submit" class="filter-btn">Применить</button>
+
+                        @if (request('status') || request('type') || request('sort') != 'newest')
+                            <a href="{{ route('realtor.dashboard') }}" class="filter-reset">Сбросить</a>
+                        @endif
+                    </form>
                 </div>
 
-                <div style="background: #fff; border-radius: 15px; box-shadow: var(--shadow-card); overflow: hidden;">
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                            <thead style="background: #f9f9f9;">
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Клиент</th>
+                                <th>Квартира</th>
+                                <th>Желаемое время</th>
+                                <th>Комментарий</th>
+                                <th>Статус</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($applications as $app)
                                 <tr>
-                                    <th style="padding: 15px; font-weight: 500; ">Клиент</th>
-                                    <th style="padding: 15px; font-weight: 500; ">Квартира</th>
-                                    <th style="padding: 15px; font-weight: 500;">Желаемое время</th>
-                                    <th style="padding: 15px; font-weight: 500; ">Комментарий</th>
-                                    <th style="padding: 15px; font-weight: 500; ">Статус</th>
-                                    <th style="padding: 15px; font-weight: 500; ">Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($applications as $app)
-                                    <tr style="border-bottom: 1px solid #eee;">
-                                        <td style="padding: 15px;">
-                                            @if ($app->user)
-                                                <div style="font-weight: 600;">{{ $app->user->name }}</div>
-                                                <a href="tel:{{ $app->user->phone }}"
-                                                    style="font-size: 12px; color: var(--color-primary); text-decoration: none;">
-                                                    {{ $app->user->phone ?? 'Нет телефона' }}
-                                                </a>
-                                            @else
-                                                <div style="font-weight: 600;">{{ $app->name ?? 'Гость' }}</div>
-                                                <div style="font-size: 12px; color: grey;">
-                                                    {{ $app->phone ?? 'Нет телефона' }}</div>
-                                            @endif
-                                        </td>
-                                        <td style="padding: 15px;">
-                                            @if ($app->apartment)
-                                                <div style="font-weight: 500;">{{ $app->apartment->title }}</div>
-                                                <div style="font-size: 16px; color: grey;">
-                                                    {{ number_format($app->apartment->price, 0, '', ' ') }}
-                                                    ₽
-                                                </div>
-                                            @else
-                                                <div style="font-weight: 500; color: #666;">Просмотр комплекса</div>
-                                                <div style="font-size: 16px; color: grey;">Без привязки к квартире</div>
-                                            @endif
-                                        </td>
-                                        <td style="padding: 15px; font-size: 16px;">
-                                            {{ $app->viewing_date ? \Carbon\Carbon::parse($app->viewing_date)->format('d.m.Y H:i') : 'Не указано' }}
-                                        </td>
-                                        <td style="padding: 20px; max-width: 200px;">
-                                            <div style="font-size: 16px; color: #4b5563; line-height: 1.4;">
-                                                {{ Str::limit($app->comment, 60) ?: 'Без комментария' }}
-                                            </div>
-                                        </td>
-                                        <td style="padding: 20px;">
-                                            @php
-                                                $statusMap = [
-                                                    'pending' => 'Новая заявка',
-                                                    'approved' => 'Заявка принята',
-                                                    'viewing_scheduled' => 'На просмотре',
-                                                    'closed' => 'Закрыта',
-                                                ];
-                                            @endphp
-                                            <span
-                                                style="color:
-                                        @if ($app->status == 'pending') #dc2626
-                                        @elseif($app->status == 'viewing_scheduled') #d97706
-                                        @elseif($app->status == 'closed') #059669
-                                        @else #2563eb @endif;">
-                                                {{ $statusMap[$app->status] ?? $app->status }}
+                                    <td>
+                                        @if ($app->user)
+                                            <div class="client-name">{{ $app->user->name }}</div>
+                                            <a href="tel:{{ $app->user->phone }}" class="link-primary" style="font-size: 12px;">
+                                                {{ $app->user->phone ?? 'Нет телефона' }}
+                                            </a>
+                                        @else
+                                            <div class="client-name">{{ $app->name ?? 'Гость' }}</div>
+                                            <span style="font-size: 12px; color: grey;">{{ $app->phone ?? 'Нет телефона' }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($app->apartment)
+                                            <div class="client-name">{{ $app->apartment->title }}</div>
+                                            <span style="font-size: 14px; color: grey;">
+                                                {{ number_format($app->apartment->price, 0, '', ' ') }} ₽
                                             </span>
-                                        </td>
-                                        <td style="padding: 15px;">
-                                            <form action="{{ route('realtor.update-status', $app->id) }}"
-                                                method="POST" style="display: flex; gap: 5px;">
-                                                @csrf
-                                                <select name="status"
-                                                    style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px;">
-                                                    <option value="pending"
-                                                        {{ $app->status == 'pending' ? 'selected' : '' }}>
-                                                        Новая
-                                                    </option>
-                                                    <option value="viewing_scheduled"
-                                                        {{ $app->status == 'viewing_scheduled' ? 'selected' : '' }}>
-                                                        Назначен просмотр
-                                                    </option>
-                                                    <option value="closed"
-                                                        {{ $app->status == 'closed' ? 'selected' : '' }}>
-                                                        Закрыта
-                                                    </option>
-                                                </select>
-                                                <button type="submit" class="btn"
-                                                    style="padding: 5px 10px; font-size: 16px; background: var(--color-primary); color: #fff;">
-                                                    OK
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" style="padding: 40px; text-align: center; color: grey;">У
-                                            вас
-                                            пока нет
-                                            активных заявок.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        @else
+                                            <div class="client-name" style="color: #666;">Просмотр комплекса</div>
+                                            <span style="font-size: 14px; color: grey;">Без привязки к квартире</span>
+                                        @endif
+                                    </td>
+                                    <td class="date-cell">
+                                        {{ $app->viewing_date ? \Carbon\Carbon::parse($app->viewing_date)->format('d.m.Y H:i') : 'Не указано' }}
+                                    </td>
+                                    <td style="max-width: 200px;">
+                                        <div style="font-size: 14px; color: #4b5563; line-height: 1.4;">
+                                            {{ Str::limit($app->comment, 60) ?: 'Без комментария' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $statusMap = [
+                                                'pending' => 'Новая заявка',
+                                                'approved' => 'Заявка принята',
+                                                'viewing_scheduled' => 'На просмотре',
+                                                'closed' => 'Закрыта',
+                                            ];
+                                            $statusColors = [
+                                                'pending' => '#dc2626',
+                                                'approved' => '#2563eb',
+                                                'viewing_scheduled' => '#d97706',
+                                                'closed' => '#059669',
+                                            ];
+                                        @endphp
+                                        <span class="status-badge" style="color: {{ $statusColors[$app->status] ?? '#333' }}">
+                                            {{ $statusMap[$app->status] ?? $app->status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form action="{{ route('realtor.update-status', $app->id) }}"
+                                            method="POST" class="assign-form">
+                                            @csrf
+                                            <select name="status" class="assign-select" onchange="this.form.submit()">
+                                                <option value="pending" {{ $app->status == 'pending' ? 'selected' : '' }}>Новая</option>
+                                                <option value="viewing_scheduled" {{ $app->status == 'viewing_scheduled' ? 'selected' : '' }}>Назначен просмотр</option>
+                                                <option value="closed" {{ $app->status == 'closed' ? 'selected' : '' }}>Закрыта</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty-state">
+                                        У вас пока нет активных заявок.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div style="padding: 20px;">
-                        {{ $applications->links() }}
-                    </div>
+                <div class="pagination-wrapper">
+                    {{ $applications->links() }}
                 </div>
             </div>
+
         </div>
-    </main>
+    </div>
+</main>
 
     <footer class="site-footer">
         <div class="site-footer__container">

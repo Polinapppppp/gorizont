@@ -11,7 +11,6 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // Разрешаем массовое присвоение ЛЮБЫХ полей
     protected $guarded = [];
 
     public function isAdmin()
@@ -19,9 +18,6 @@ class User extends Authenticatable
         return $this->role_id == 2;
     }
 
-    /**
-     * Проверка: является ли пользователь Риэлтором (role_id = 3)
-     */
     public function isRealtor()
     {
         return $this->role_id == 3;
@@ -33,5 +29,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function applications()
+    {
+        return $this->hasMany(Application::class, 'realtor_id');
+    }
+
+
+    public function userApplications()
+    {
+        return $this->hasMany(Application::class, 'user_id');
     }
 }

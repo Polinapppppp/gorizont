@@ -95,4 +95,36 @@ class AuthController extends Controller
 
         return redirect('/')->with('success', 'Вы вышли из аккаунта.');
     }
+
+    public function profile(Request $request)
+{
+    $query = \App\Models\Application::where('user_id', Auth::id())
+        ->with(['apartment', 'realtor']);
+
+    // Фильтр по статусу
+    if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'viewing_scheduled', 'closed'])) {
+        $query->where('status', $request->status);
+    }
+
+    // Сортировка
+    $sort = $request->get('sort', 'newest');
+    switch ($sort) {
+        case 'oldest':
+            $query->oldest();
+            break;
+        case 'viewing_asc':
+            $query->orderByRaw('viewing_date IS NULL, viewing_date ASC');
+            break;
+        case 'viewing_desc':
+            $query->orderByRaw('viewing_date IS NULL, viewing_date DESC');
+            break;
+        default:
+            $query->latest();
+            break;
+    }
+
+    $applications = $query->paginate(10)->withQueryString();
+
+    return view('user.profile', compact('applications', 'sort'));
+}
 }

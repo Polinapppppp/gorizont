@@ -14,7 +14,6 @@
     <link rel="shortcut icon" href="{{ asset('assets/img/fav.png') }}" type="image/x-icon">
 
     <style>
-        /* --- Стили модального окна (существующие) --- */
         .modal-content {
             background: #fff;
             padding: 40px;
@@ -61,7 +60,6 @@
             padding-left: 20px;
         }
 
-        /* Form Fields in Modal */
         .auth-field {
             margin-bottom: 15px;
         }
@@ -93,7 +91,6 @@
             width: 100%;
         }
 
-        /* --- Стили страницы детали квартиры (существующие) --- */
         .apartment-detail {
             max-width: 1200px;
             margin: 0 auto;
@@ -152,7 +149,6 @@
             object-fit: contain;
         }
 
-        /* Right Column - Card */
         .apartment-detail__card {
             background: #fff;
             border: 1px solid rgba(0, 0, 0, 0.08);
@@ -316,7 +312,6 @@
             width: 100%;
         }
 
-        /* --- Стили для Алерта (Новые) --- */
         .custom-alert {
             position: fixed;
             top: 20px;
@@ -399,7 +394,7 @@
 <body class="page">
     <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -411,7 +406,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif
@@ -434,7 +431,6 @@
             </div>
         </div>
     </header>
-
     <div class="mobile-menu-overlay" id="mobileMenuOverlay">
         <nav class="mobile-nav">
             <a class="mobile-link" href="/">Главная</a>
@@ -643,15 +639,17 @@
 
                 <div class="auth-field">
                     <label>Удобное время</label>
-                    <input type="datetime-local" name="viewing_date" required>
+                    <input type="datetime-local" name="viewing_date" min="{{ now()->format('Y-m-d\TH:i') }}"
+                        required>
                 </div>
-
                 <div class="auth-field">
                     <label>Комментарий</label>
                     <textarea name="comment" rows="3" placeholder="Комментарий">{{ old('comment') }}</textarea>
                 </div>
 
-                <button type="submit" class="btn--primary modal-submit-btn" style=" font-family: var(--font-body); font-weight:400;font-size: clamp(14px, 1.4vw, 20px);">Отправить заявку</button>
+                <button type="submit" class="btn--primary modal-submit-btn"
+                    style=" font-family: var(--font-body); font-weight:400;font-size: clamp(14px, 1.4vw, 20px);">Отправить
+                    заявку</button>
             </form>
         </div>
     </div>

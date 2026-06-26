@@ -7,21 +7,43 @@ use Illuminate\Http\Request;
 
 class RealtorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Риэлтор видит только те заявки, где realtor_id равен его ID
-        $applications = Application::where('realtor_id', auth()->id())
-            ->with(['user', 'apartment'])
-            ->latest()
-            ->paginate(15);
+        $query = Application::where('realtor_id', auth()->id())
+            ->with(['user', 'apartment']);
 
-        return view('realtor.dashboard', compact('applications'));
+        // Фильтр по статусу
+        if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'viewing_scheduled', 'closed'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Фильтр по типу (с квартирой / просмотр комплекса)
+        if ($request->filled('type')) {
+            if ($request->type === 'with_apartment') {
+                $query->whereNotNull('apartment_id');
+            } elseif ($request->type === 'complex_only') {
+                $query->whereNull('apartment_id');
+            }
+        }
+
+        // Сортировка
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+
+        $applications = $query->paginate(15)->withQueryString();
+
+        return view('realtor.dashboard', compact('applications', 'sort'));
     }
 
-    // Метод для изменения статуса заявки (например, "Просмотр состоялся")
     public function updateStatus(Request $request, Application $application)
     {
-        // Проверка, что эта заявка действительно принадлежит этому риэлтору
         if ($application->realtor_id != auth()->id()) {
             abort(403);
         }
@@ -32,6 +54,6 @@ class RealtorController extends Controller
 
         $application->update(['status' => $validated['status']]);
 
-        return back()->with('success', 'Статус заявки обновлен.');
+        return back()->with('success', 'Статус заявки обновлён.');
     }
 }

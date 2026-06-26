@@ -13,7 +13,7 @@
 <body class="page">
     <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -25,7 +25,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif
@@ -96,12 +98,7 @@
                             <span style="color:red">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="auth-options">
-                        <label class="auth-checkbox">
-                            <input type="checkbox" name="remember" /> Запомнить меня
-                        </label>
-                        <a href="#" class="auth-link">Забыли пароль?</a>
-                    </div>
+            
                     <button type="submit" class="btn auth-submit">Войти</button>
                 </form>
                 <p class="auth-footer">
@@ -144,9 +141,7 @@
                         class="site-footer__map-frame" allowfullscreen="true">
                     </iframe>
                 </div>
-
             </div>
-
             <div class="site-footer__divider">
                 <img src="{{ asset('assets/img/footer-line.svg') }}" alt="" aria-hidden="true"
                     width="1400" height="2">

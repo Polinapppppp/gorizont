@@ -60,8 +60,24 @@ class ApartmentController extends Controller
                 break;
         }
 
-        $apartments = $query->paginate(9);
-        return view('apartments.index', compact('apartments'));
+        $apartments = $query->paginate(9)->withQueryString();
+
+        $ranges = [
+            'price' => [
+                'min' => Apartment::min('price') ?? 0,
+                'max' => Apartment::max('price') ?? 40000000,
+            ],
+            'area' => [
+                'min' => Apartment::min('area') ?? 20,
+                'max' => Apartment::max('area') ?? 100,
+            ],
+            'floor' => [
+                'min' => Apartment::min('floor') ?? 1,
+                'max' => Apartment::max('floor') ?? 7,
+            ],
+        ];
+
+        return view('apartments.index', compact('apartments', 'ranges'));
     }
 
     public function create()
@@ -87,6 +103,7 @@ class ApartmentController extends Controller
             'image'          => 'nullable|image|mimes:jpg,png|max:2048',
             'description'    => 'nullable|string|max:1000',
         ]);
+
         $exists = Apartment::where('building_id', $validated['building_id'])
             ->where('floor', $validated['floor'])
             ->where('zone_number', $validated['zone_number'])
@@ -139,16 +156,16 @@ class ApartmentController extends Controller
         ]);
 
         $exists = Apartment::where('building_id', $validated['building_id'])
-        ->where('floor', $validated['floor'])
-        ->where('zone_number', $validated['zone_number'])
-        ->where('id', '!=', $apartment->id) 
-        ->exists();
+            ->where('floor', $validated['floor'])
+            ->where('zone_number', $validated['zone_number'])
+            ->where('id', '!=', $apartment->id)
+            ->exists();
 
-    if ($exists) {
-        return back()->withInput()->withErrors([
-            'zone_number' => 'На этом этаже в данной зоне уже есть другая квартира!'
-        ]);
-    }
+        if ($exists) {
+            return back()->withInput()->withErrors([
+                'zone_number' => 'На этом этаже в данной зоне уже есть другая квартира!'
+            ]);
+        }
 
         $validated['has_balcony'] = $request->has('has_balcony');
 
@@ -166,7 +183,9 @@ class ApartmentController extends Controller
 
     public function destroy(Apartment $apartment)
     {
-        if ($apartment->image) Storage::disk('public')->delete($apartment->image);
+        if ($apartment->image) {
+            Storage::disk('public')->delete($apartment->image);
+        }
         $apartment->delete();
         return redirect()->route('apartments.index');
     }

@@ -19,6 +19,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/applications', [\App\Http\Controllers\ApplicationController::class, 'store'])->name('applications.store');
+
+    Route::get('/profile', [AuthController::class, 'profile'])->name('user.profile');
 });
 Route::middleware(\App\Http\Middleware\isAdmin::class)->group(function () {
     Route::get('/apartments/create', [\App\Http\Controllers\ApartmentController::class, 'create'])->name('apartments.create');

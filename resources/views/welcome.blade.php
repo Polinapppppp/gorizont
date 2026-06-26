@@ -19,8 +19,10 @@
 <body class="page">
     <section class="hero">
         <div class="hero__bg">
-            <img class="hero__bg-img" src="assets/img/hero-bg.png" alt="" width="1514" height="750"
-                decoding="async">
+            <a href="/">
+                <img class="hero__bg-img" src="assets/img/hero-bg.png" alt="" width="1514" height="750"
+                    decoding="async">
+            </a>
         </div>
         <header class="hero__header header">
             <div class="header__inner">
@@ -36,7 +38,9 @@
                         <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                         <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                         <a class="header__link" href="/apartments">Каталог</a>
-
+                        @if (auth()->user() && auth()->user()->role_id == 1)
+                            <a class="header__link" href="/profile">Личный кабинет</a>
+                        @endif
                         @if (auth()->check() && auth()->user()->isAdmin())
                             <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                         @endif
@@ -105,8 +109,8 @@
             </div>
             <aside class="hero__tour tour-card">
                 <div class="tour-card__media">
-                    <img class="tour-card__img" src="assets/img/tour-thumb.png" alt="Превью онлайн-тура" width="266"
-                        height="177" decoding="async">
+                    <img class="tour-card__img" src="assets/img/tour-thumb.png" alt="Превью онлайн-тура"
+                        width="266" height="177" decoding="async">
                 </div>
                 <p class="tour-card__title">Интерактивная карта проекта</p>
                 <a class="tour-card__btn" href="#view-3d">
@@ -782,7 +786,9 @@
                     <textarea name="comment" rows="3" placeholder="Комментарий">{{ old('comment') }}</textarea>
                 </div>
 
-                <button type="submit" class="btn modal-submit-btn" style=" font-family: var(--font-body); font-weight:400;font-size: clamp(14px, 1.4vw, 20px);">Отправить заявку</button>
+                <button type="submit" class="btn modal-submit-btn"
+                    style=" font-family: var(--font-body); font-weight:400;font-size: clamp(14px, 1.4vw, 20px);">Отправить
+                    заявку</button>
             </form>
         </div>
     </div>
@@ -868,6 +874,7 @@
             });
         @endif
 
+        /* координаты квартир */
         const floorLayouts = {
             1: [{
                     zone: 1,
@@ -1053,15 +1060,16 @@
             ]
         };
 
-        let apartmentsCache = {};
-        let currentHouseId = 1;
+        let apartmentsCache = {}; /* для кэширования */
+        let currentHouseId = 1; /* отслеживание контекста */
         let currentFloorId = 1;
 
         async function fetchFloorData(houseId, floorId) {
             const cacheKey = `${houseId}-${floorId}`;
-            if (apartmentsCache[cacheKey]) return apartmentsCache[cacheKey];
+            if (apartmentsCache[cacheKey]) return apartmentsCache[cacheKey];/* проверка кэширования */
 
             try {
+                /* получение данных с сервера */
                 const response = await fetch(`/api/building/${houseId}/floor/${floorId}`);
                 const data = await response.json();
                 apartmentsCache[cacheKey] = data;
@@ -1086,9 +1094,11 @@
 
         async function changeFloor(floorId) {
             currentFloorId = floorId;
+            /* получение данных */
             const data = await fetchFloorData(currentHouseId, floorId);
             const layout = floorLayouts[floorId] || floorLayouts[1];
 
+            /* отображение статистики */
             const stats = {
                 free: 0,
                 sold: 0,
@@ -1096,6 +1106,7 @@
             };
             data.forEach(apt => stats[apt.status]++);
 
+            /* обновление статистики на этаже */
             document.getElementById('floorTotal').textContent = data.length;
             document.getElementById('floorFree').textContent = stats.free;
             document.getElementById('floorSold').textContent = stats.sold;
@@ -1107,20 +1118,22 @@
             floorPlan.querySelectorAll('.apt').forEach(el => el.remove());
 
             data.forEach((apt, index) => {
+                /* по номеру зоны ищем изображение квартиры */
                 const zoneData = layout.find(l => l.zone === apt.zone_number) || layout[index];
                 if (!zoneData) return;
 
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); /* указываем пространство имен чтобы отобразить что элемент свг так как игнорируются атрибуты свг */
                 svg.setAttribute('class', `apt apt--${apt.zone_number}`);
                 svg.setAttribute('viewBox', zoneData.viewBox);
                 svg.setAttribute('preserveAspectRatio', 'none');
 
+                /* создание ссылки для клика */
                 const link = document.createElementNS('http://www.w3.org/2000/svg', 'a');
                 link.setAttribute('href', '#');
                 link.setAttribute('class', 'apt-link');
                 link.setAttribute('id', `apt--${apt.zone_number}`);
                 link.setAttribute('data-status', apt.status);
-                link.setAttribute('onclick', `showApartmentCard(${apt.id}); return false;`);
+                link.setAttribute('onclick', `showApartmentCard(${apt.id}); return false;`);/* клик для перехода на страницу квартиры */
 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('class', 'apt-shape');
@@ -1135,6 +1148,7 @@
         async function changeListFloor(floorId) {
             const data = await fetchFloorData(currentHouseId, floorId);
 
+            /* генерация карточек квартир */
             const grid = document.getElementById('apartmentsList');
             grid.innerHTML = data.map(apt => `
                 <article class="catalog-card">
@@ -1143,8 +1157,8 @@
                             ${apt.image ?
                                 `<img src="/storage/${apt.image}" alt="${apt.title}" class="list-card-img">` :
                                 `<div class="list-card-placeholder">
-                                                                        ${apt.status === 'sold' ? 'Продана' : apt.status === 'booked' ? 'Забронирована' : 'Свободна'}
-                                                                    </div>`
+                                                                                ${apt.status === 'sold' ? 'Продана' : apt.status === 'booked' ? 'Забронирована' : 'Свободна'}
+                                                                            </div>`
                             }
                         </div>
                     </a>
@@ -1170,6 +1184,7 @@
         }
 
         function show3D() {
+            /* показываем генплан */
             document.getElementById('view-3d').style.display = 'block';
             document.getElementById('view-floor').style.display = 'none';
             document.getElementById('view-list').style.display = 'none';
@@ -1191,7 +1206,7 @@
         }
 
         function showFloors(houseId) {
-            currentHouseId = houseId;
+            currentHouseId = houseId; /* запоминает какой дом выбран */
             document.getElementById('view-3d').style.display = 'none';
             document.getElementById('view-floor').style.display = 'block';
             document.getElementById('view-list').style.display = 'none';

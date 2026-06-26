@@ -12,177 +12,12 @@
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <link rel="shortcut icon" href="{{ asset('assets/img/fav.png') }}" type="image/x-icon">
-
-    <style>
-        .custom-select {
-            position: relative;
-            width: 100%;
-        }
-
-        .custom-select select {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 100%;
-            padding: 12px 40px 12px 16px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            background: #fff;
-            font-size: 16px;
-            font-family: 'Montserrat', sans-serif;
-            cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .custom-select select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(21, 37, 50, 0.08);
-        }
-
-        .custom-select::after {
-            content: '';
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 8px;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%231E1E1E' stroke-opacity='0.7' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            pointer-events: none;
-        }
-
-        .file-upload {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 200px;
-            border: 2px dashed rgba(0, 0, 0, 0.15);
-            border-radius: 16px;
-            background: #fafafa;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .file-upload:hover {
-            border-color: var(--color-primary);
-            background: rgba(21, 37, 50, 0.02);
-        }
-
-        .file-upload.has-file {
-            border-style: solid;
-            border-color: var(--color-primary);
-            background: rgba(46, 204, 113, 0.05);
-        }
-
-        .file-upload input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 5;
-            width: 100%;
-            height: 100%;
-        }
-
-        .file-upload__text {
-            font-size: 16px;
-            color: var(--color-text-muted);
-            text-align: center;
-        }
-
-        .file-upload__text strong {
-            color: var(--color-primary);
-            font-weight: 600;
-        }
-
-        .file-upload__hint {
-            font-size: 13px;
-            color: #999;
-            margin-top: 8px;
-        }
-
-        .file-upload__preview {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-            z-index: 2;
-        }
-
-        .file-upload.has-file .file-upload__preview {
-            display: block;
-        }
-
-        .file-upload.has-file .file-upload__content {
-            display: none;
-        }
-
-        .file-upload__remove {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: #c0392b;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            pointer-events: all;
-        }
-
-        .file-upload.has-file .file-upload__remove {
-            display: flex;
-        }
-
-        .checkbox-field {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            background: #fff;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .checkbox-field:hover {
-            border-color: var(--color-primary);
-        }
-
-        .checkbox-field input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            accent-color: var(--color-primary);
-            cursor: pointer;
-        }
-
-        .checkbox-field label {
-            font-size: 15px;
-            cursor: pointer;
-            margin: 0;
-        }
-    </style>
 </head>
 
 <body class="page">
     <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -194,7 +29,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif

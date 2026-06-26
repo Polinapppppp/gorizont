@@ -11,9 +11,9 @@
 </head>
 
 <body class="page">
-    <header class="hero__header header">
+     <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -25,7 +25,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif
@@ -114,8 +116,8 @@
                     </div>
                     <div class="auth-options">
                         <label class="auth-checkbox">
-                            <input type="checkbox" required /> Согласен с <a href="#"
-                                class="auth-link">условиями</a>
+                            <input type="checkbox" required /> Согласен с обработкой <a href="#"
+                                class="auth-link"> персональных данных</a>
                         </label>
                     </div>
                     <button type="submit" class="btn auth-submit">Зарегистрироваться</button>
@@ -202,7 +204,6 @@
                 return result;
             };
 
-            // При фокусе — если пусто, ставим +7
             phoneInput.addEventListener('focus', function() {
                 if (this.value === '' || this.value === '+7') {
                     this.value = '+7 ';
@@ -222,7 +223,7 @@
 
             phoneInput.addEventListener('blur', function() {
                 const digits = this.value.replace(/\D/g, '');
-                if (digits.length < 11) { // +7 + 10 цифр = 11
+                if (digits.length < 11) {
                     this.value = '';
                 }
             });

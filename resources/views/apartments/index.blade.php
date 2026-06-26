@@ -13,171 +13,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <link rel="shortcut icon" href="{{ asset('assets/img/fav.png') }}" type="image/x-icon">
-
-    <style>
-        /* Pill Buttons (Rooms Filter) */
-        .pill-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .pill {
-            min-width: 64px;
-            padding: 12px 24px;
-            border-radius: 12px;
-            border: 2px solid #e5e7eb;
-            background: #fff;
-            color: #888;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: 'Montserrat', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .pill:hover {
-            border-color: var(--color-primary);
-            color: var(--color-primary);
-        }
-
-        .pill--active {
-            background: var(--color-primary);
-            border-color: var(--color-primary);
-            color: #fff;
-        }
-
-        .pill--active:hover {
-            background: #1a2d3d;
-            border-color: #1a2d3d;
-            color: #fff;
-        }
-
-        /* Catalog Page Specific Styles */
-        .catalog__head {
-            margin-bottom: 30px;
-        }
-
-        .btn-add-apartment {
-            background: var(--color-primary);
-            color: #fff;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .catalog-filters-container {
-            padding: 30px;
-            background: #fff;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            margin-bottom: 40px;
-        }
-
-        .filters-row-top {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            align-items: flex-start;
-            margin-bottom: 30px;
-        }
-
-        .filter-item-rooms {
-            flex: 1 1 200px;
-        }
-
-        .filter-item-price {
-            flex: 2 1 300px;
-        }
-
-        .filter-item-area {
-            flex: 2 1 300px;
-        }
-
-        .filter-item-floor {
-            flex: 1 1 200px;
-        }
-
-        .slider-container {
-            margin: 15px 0 10px 0;
-        }
-
-        .slider-values {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 500;
-            font-size: 16px;
-        }
-
-        .filters-row-bottom {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sort-select-wrapper {
-            flex: 0 0 auto;
-        }
-
-        .sort-select {
-            border-radius: 15px;
-            border: 1px solid #ccc;
-        }
-
-        .filters-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .btn-submit-filter {
-            background: var(--color-primary);
-            color: #fff;
-            padding: 14px 40px;
-            border-radius: 15px;
-        }
-
-        /* Card Specifics */
-        .card-meta-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            color: var(--color-text-muted);
-            font-size: 14px;
-        }
-
-        .card-action-btn {
-            margin-top: 20px;
-        }
-
-        .pagination-wrapper {
-            margin-top: 40px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .no-results {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: grey;
-        }
-    </style>
 </head>
 
 <body class="page">
-   <header class="hero__header header">
+    <header class="hero__header header">
         <div class="header__inner">
-            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+            <a class="header__logo" href="/"><img src="{{ asset('assets/img/logo2.svg') }}" alt=""></a>
 
             <button class="burger-btn" id="burgerBtn" aria-label="Меню">
                 <span></span><span></span><span></span>
@@ -189,7 +30,9 @@
                     <a class="header__link" href="{{ url('/') }}#view-3d">Выбрать квартиру</a>
                     <a class="header__link" href="{{ url('/') }}#developer">О застройщике</a>
                     <a class="header__link" href="/apartments">Каталог</a>
-
+                    @if (auth()->user() && auth()->user()->role_id == 1)
+                        <a class="header__link" href="/profile">Личный кабинет</a>
+                    @endif
                     @if (auth()->check() && auth()->user()->isAdmin())
                         <a class="header__link" href="/admin/dashboard">Админ-панель</a>
                     @endif
@@ -280,41 +123,51 @@
                         <label class="catalog-filter__label">Стоимость, ₽</label>
                         <div id="slider-price" class="slider-container"></div>
                         <div class="slider-values">
-                            <span>от <span
-                                    id="val-price-min">{{ number_format(request('price_min', 5000000), 0, '', ' ') }}</span></span>
-                            <span>до <span
-                                    id="val-price-max">{{ number_format(request('price_max', 40000000), 0, '', ' ') }}</span></span>
+                            <span>от <span id="val-price-min">
+                                {{ number_format(request('price_min', $ranges['price']['min']), 0, '', ' ') }}
+                            </span></span>
+                            <span>до <span id="val-price-max">
+                                {{ number_format(request('price_max', $ranges['price']['max']), 0, '', ' ') }}
+                            </span></span>
                         </div>
                         <input type="hidden" name="price_min" id="input-price-min"
-                            value="{{ request('price_min', 5000000) }}">
+                            value="{{ request('price_min', $ranges['price']['min']) }}">
                         <input type="hidden" name="price_max" id="input-price-max"
-                            value="{{ request('price_max', 40000000) }}">
+                            value="{{ request('price_max', $ranges['price']['max']) }}">
                     </div>
 
                     <div class="filter-item-area">
                         <label class="catalog-filter__label">Площадь, м²</label>
                         <div id="slider-area" class="slider-container"></div>
                         <div class="slider-values">
-                            <span>от <span id="val-area-min">{{ request('area_min', 20) }}</span> м²</span>
-                            <span>до <span id="val-area-max">{{ request('area_max', 100) }}</span> м²</span>
+                            <span>от <span id="val-area-min">
+                                {{ request('area_min', $ranges['area']['min']) }}
+                            </span> м²</span>
+                            <span>до <span id="val-area-max">
+                                {{ request('area_max', $ranges['area']['max']) }}
+                            </span> м²</span>
                         </div>
                         <input type="hidden" name="area_min" id="input-area-min"
-                            value="{{ request('area_min', 20) }}">
+                            value="{{ request('area_min', $ranges['area']['min']) }}">
                         <input type="hidden" name="area_max" id="input-area-max"
-                            value="{{ request('area_max', 100) }}">
+                            value="{{ request('area_max', $ranges['area']['max']) }}">
                     </div>
 
                     <div class="filter-item-floor">
                         <label class="catalog-filter__label">Этаж</label>
                         <div id="slider-floor" class="slider-container"></div>
                         <div class="slider-values">
-                            <span>от <span id="val-floor-min">{{ request('floor_min', 1) }}</span></span>
-                            <span>до <span id="val-floor-max">{{ request('floor_max', 7) }}</span></span>
+                            <span>от <span id="val-floor-min">
+                                {{ request('floor_min', $ranges['floor']['min']) }}
+                            </span></span>
+                            <span>до <span id="val-floor-max">
+                                {{ request('floor_max', $ranges['floor']['max']) }}
+                            </span></span>
                         </div>
                         <input type="hidden" name="floor_min" id="input-floor-min"
-                            value="{{ request('floor_min', 1) }}">
+                            value="{{ request('floor_min', $ranges['floor']['min']) }}">
                         <input type="hidden" name="floor_max" id="input-floor-max"
-                            value="{{ request('floor_max', 7) }}">
+                            value="{{ request('floor_max', $ranges['floor']['max']) }}">
                     </div>
                 </div>
 
@@ -389,14 +242,14 @@
             {{ $apartments->links('vendor.simple') }}
         </div>
     </section>
+
     <footer class="site-footer">
         <div class="site-footer__container">
             <div class="site-footer__top">
-
                 <div class="site-footer__left-col">
                     <div class="site-footer__brand">
-                        <p class="site-footer__logo"> <a class="header__logo" href="#"><img
-                                    src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
+                        <p class="site-footer__logo">
+                            <a class="header__logo" href="#"><img src="{{ asset('assets/img/logo.svg') }}" alt=""></a>
                         </p>
                         <div class="site-footer__contacts">
                             <div class="site-footer__contact">
@@ -422,7 +275,6 @@
                         class="site-footer__map-frame" allowfullscreen="true">
                     </iframe>
                 </div>
-
             </div>
 
             <div class="site-footer__divider">
@@ -435,6 +287,21 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
     <script>
+        const ranges = {
+            price: {
+                min: {{ $ranges['price']['min'] }},
+                max: {{ $ranges['price']['max'] }}
+            },
+            area: {
+                min: {{ $ranges['area']['min'] }},
+                max: {{ $ranges['area']['max'] }}
+            },
+            floor: {
+                min: {{ $ranges['floor']['min'] }},
+                max: {{ $ranges['floor']['max'] }}
+            }
+        };
+
         function setRoomFilter(rooms) {
             const input = document.getElementById('rooms-input');
             const currentValue = input.value;
@@ -456,8 +323,7 @@
             document.getElementById('filter-form').submit();
         }
 
-        function initSlider(sliderId, minValId, maxValId, inputMinId, inputMaxId, min, max, startMin, startMax, isPrice =
-            false) {
+        function initSlider(sliderId, minValId, maxValId, inputMinId, inputMaxId, range, startMin, startMax, isPrice = false) {
             const slider = document.getElementById(sliderId);
             const valMin = document.getElementById(minValId);
             const valMax = document.getElementById(maxValId);
@@ -468,8 +334,8 @@
                 start: [startMin, startMax],
                 connect: true,
                 range: {
-                    'min': min,
-                    'max': max
+                    'min': range.min,
+                    'max': range.max
                 },
                 step: 1,
                 format: {
@@ -500,22 +366,22 @@
             const urlParams = new URLSearchParams(window.location.search);
 
             initSlider('slider-price', 'val-price-min', 'val-price-max', 'input-price-min', 'input-price-max',
-                5000000, 40000000,
-                parseInt(urlParams.get('price_min')) || 5000000,
-                parseInt(urlParams.get('price_max')) || 40000000,
+                ranges.price,
+                parseInt(urlParams.get('price_min')) || ranges.price.min,
+                parseInt(urlParams.get('price_max')) || ranges.price.max,
                 true
             );
 
             initSlider('slider-area', 'val-area-min', 'val-area-max', 'input-area-min', 'input-area-max',
-                20, 100,
-                parseInt(urlParams.get('area_min')) || 20,
-                parseInt(urlParams.get('area_max')) || 100
+                ranges.area,
+                parseInt(urlParams.get('area_min')) || ranges.area.min,
+                parseInt(urlParams.get('area_max')) || ranges.area.max
             );
 
             initSlider('slider-floor', 'val-floor-min', 'val-floor-max', 'input-floor-min', 'input-floor-max',
-                1, 7,
-                parseInt(urlParams.get('floor_min')) || 1,
-                parseInt(urlParams.get('floor_max')) || 7
+                ranges.floor,
+                parseInt(urlParams.get('floor_min')) || ranges.floor.min,
+                parseInt(urlParams.get('floor_max')) || ranges.floor.max
             );
         });
     </script>
